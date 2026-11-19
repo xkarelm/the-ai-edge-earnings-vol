@@ -13,6 +13,7 @@ each slide's speaker notes cite the file and row for its numbers.
     data/processed/results_risk_limit_m1_session.csv  the 2017-07-24 example session (same models and rule)
     data/processed/text_subset_representativeness.csv text-subset medians (market cap, analysts)
     data/processed/build_log.txt                      data funnel
+    data/processed/example_rows_dev.csv               six real development rows for the data slide
     data/processed/text_features_v2.parquet           number of text PCA components (column count)
 
 The three parquet files are licensed / row-level and not committed. Without them the four descriptive figures
@@ -286,9 +287,9 @@ text(s, M + 0.3, 5.3, 11.8, 0.95, ["Sacha Elalouf · Karel Moryoussef · Ana Cio
      size=18, color=BODY, space_after=6, name="Authors and date")
 text(s, W - M - 1.0, H - 0.55, 1.0, 0.36, ["1"], size=11, color=MUTED, align=PP_ALIGN.RIGHT, name="Page number")
 notes(s, "Every number in this deck is read from data/processed results files at build time (see deck/build_pptx.py). "
-         "Holdout (2021-25) results: results_holdout.csv (tabular) and results_m1_v2.csv (text), each run once (slides 5, 6, 9). "
-         "Decision results (slides 7-8): results_risk_limit_m1.csv and results_risk_limit_m1_session.csv (validation only) "
-         "plus results_risk_limit.csv (full sample). No appendix; key terms on slide 4, R² on slide 5, big move on slide 8.")
+         "Holdout (2021-25) results: results_holdout.csv (tabular) and results_m1_v2.csv (text), each run once (slides 6, 7, 10). "
+         "Decision results (slides 8-9): results_risk_limit_m1.csv and results_risk_limit_m1_session.csv (validation only) "
+         "plus results_risk_limit.csv (full sample). No appendix; example rows on slide 4, key terms on slide 5, R² on slide 6, big move on slide 9.")
 
 # ======================================================================= 2. problem
 s = frame(2, "The problem: setting risk limits on earnings night")
@@ -366,8 +367,77 @@ notes(s, f"Source: data/processed/build_log.txt. {F0:,} = '8-K earnings events i
          "notebooks/figures/data_pipeline.png (deck/data_pipeline.dot.py), cropped at build time to drop its own title and "
          "funnel strip (the funnel is drawn at right). Merges the former data and pipeline slides.")
 
+# ======================================================================= 4. what one event looks like
+# Six real rows of model_table.parquet (development split): the first dev event, by release time, of six names.
+# Saved to data/processed/example_rows_dev.csv because model_table.parquet is licensed and not committed.
+s = frame(4, "What one earnings event looks like")
+tag(s, "Real rows · development data")
+ex = pd.read_csv(P / "example_rows_dev.csv")
+assert len(ex) == 6 and (pd.to_datetime(ex.session_date).dt.year <= 2016).all()
+text(s, M, TOP - 0.05, W - 2 * M, 0.45, [[("One row per 8-K earnings release. ", {"bold": True, "color": INK}),
+     ("Inputs are known before the release; ", {}), ("v_post is what we predict.", {"bold": True, "color": BLUE})]],
+     size=17, name="Lead")
+XCOLS = ["ticker", "session_date", "when", "sue_price", "log_mktcap", "sector", "v_pre", "v_post"]
+xw = [0.95, 1.5, 1.45, 1.35, 1.45, 1.95, 1.65, 1.75]
+TX, TY, HROW, BROW = M, TOP + 1.05, 0.5, 0.48
+TARGET_BG = RGBColor(0xE3, 0xEB, 0xF5)
+_vol = lambda v: f"{v:.2f}  ({np.exp(v):.1%})"
+_sector = lambda s_: s_.split("_", 1)[1].replace("_", " & ").capitalize()
+xrows = [[r.ticker, r.session_date, r.when.replace("_", "-"), f"{r.sue_price:.4f}", f"{r.log_mktcap:.2f}",
+          _sector(r.sector), _vol(r.v_pre), _vol(r.v_post)] for r in ex.itertuples()]
+# group labels above the table: inputs vs target
+in_w = sum(xw[:-1])
+box(s, TX, TY - 0.47, in_w - 0.04, 0.4, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Inputs band")
+text(s, TX, TY - 0.47, in_w - 0.04, 0.4, ["Inputs (known before the release)"], size=14, bold=True, color=MUTED,
+     align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, name="Inputs label")
+box(s, TX + in_w, TY - 0.47, xw[-1], 0.4, fill=BLUE, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Target band")
+text(s, TX + in_w, TY - 0.47, xw[-1], 0.4, ["Target →"], size=14, bold=True, color=WHITE, align=PP_ALIGN.CENTER,
+     anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, name="Target label")
+gf = s.shapes.add_table(len(xrows) + 1, len(XCOLS), Inches(TX), Inches(TY), Inches(sum(xw)),
+                        Inches(HROW + BROW * len(xrows)))
+gf.name = "Example rows table"
+tb = gf.table
+tb.first_row = True; tb.horz_banding = False
+for j, w in enumerate(xw):
+    tb.columns[j].width = Inches(w)
+for i, row in enumerate([XCOLS] + xrows):
+    tb.rows[i].height = Inches(HROW if i == 0 else BROW)
+    for j, val in enumerate(row):
+        cell = tb.cell(i, j)
+        cell.margin_left = cell.margin_right = Inches(0.08)
+        cell.margin_top = cell.margin_bottom = Inches(0.02)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tcPr = cell._tc.get_or_add_tcPr()
+        for side in ("a:lnL", "a:lnR", "a:lnT", "a:lnB"):
+            ln = etree.SubElement(tcPr, qn(side), w=str(Pt(1 if side == "a:lnB" else 0)))
+            if side == "a:lnB":
+                sf = etree.SubElement(ln, qn("a:solidFill")); etree.SubElement(sf, qn("a:srgbClr")).set("val", str(LINE))
+            else:
+                etree.SubElement(ln, qn("a:noFill"))
+        target = j == len(XCOLS) - 1
+        if i == 0:
+            fill, color, bold = (BLUE, WHITE, True) if target else (TINT, MUTED, True)
+        else:
+            fill, color, bold = (TARGET_BG, BLUE, True) if target else (WHITE, BODY, j == 0)
+        cell.fill.solid(); cell.fill.fore_color.rgb = fill
+        p_ = cell.text_frame.paragraphs[0]
+        p_.alignment = PP_ALIGN.LEFT if j in (0, 1, 2, 5) else PP_ALIGN.RIGHT
+        r_ = p_.add_run(); r_.text = val
+        r_.font.name = FONT; r_.font.size = Pt(13 if i == 0 else 15); r_.font.bold = bold; r_.font.color.rgb = color
+text(s, M, TY + HROW + BROW * len(xrows) + 0.1, W - 2 * M, 0.35,
+     ["Daily volatility in brackets · first development-period event of six names"], size=12, italic=True,
+     color=MUTED, name="Table note")
+text(s, M, 6.45, W - 2 * M - 1.2, 0.4, ["v_pre/v_post = log realized volatility 20 days before / 5 days after; "
+     "sue_price = earnings surprise ÷ price; log_mktcap = log market value; when = release timing. "
+     "v_post is what we predict."], size=13, italic=True, color=BODY, name="Caption")
+notes(s, "Six real rows of data/processed/model_table.parquet, development split (2006-16), no holdout rows: for each of "
+         "SLM, SAI, PFG, SPF, RATE and TAST, the first development event by release time. Saved to "
+         "data/processed/example_rows_dev.csv (model_table.parquet is licensed and not committed). Values are as stored; "
+         "daily volatility in brackets = exp(v). log_mktcap is the log of CRSP market value in $000 at the last close before "
+         "the release. Definitions: DEFINITIONS.md.")
+
 # ======================================================================= 5. approach
-s = frame(4, "The approach: a ladder that attributes value")
+s = frame(5, "The approach: a ladder that attributes value")
 LW = 7.0
 text(s, M, TOP - 0.05, W - 2 * M, 0.45, [[("Predict ", {}), ("post-earnings realized volatility (v_post)", {"bold": True, "color": INK}),
                            (": size, not direction · one change per rung", {})]], size=17, name="Lead")
@@ -404,7 +474,7 @@ notes(s, "Figure: notebooks/figures/02_vpre_vs_vpost.png (dev data). Rungs 1-3 a
          "(sue_price = (actual - median consensus) / price two sessions before the reaction).")
 
 # ======================================================================= 5. all results, one table
-s = frame(5, "Does it work? Yes, driven mostly by past volatility")
+s = frame(6, "Does it work? Yes, driven mostly by past volatility")
 text(s, M, TOP - 0.05, 7.4, 0.4, ["R² at 5 days · train 2006–16 · validation 2017–19 · holdout 2021–25 (run once)"],
      size=14, bold=True, color=MUTED, name="Caption")
 cols = [3.2, 1.05, 0.95, 1.05, 0.95]                                     # layer | val | adds | holdout | adds
@@ -479,7 +549,7 @@ notes(s, "Holdout R² is measured against the holdout's own mean; against the 20
          "n = 25,659; deck/plots_pred_timing.py).")
 
 # ======================================================================= 7. text (headline)
-s = frame(6, "Does the earnings-release text add value?")
+s = frame(7, "Does the earnings-release text add value?")
 tag(s, SUB_TAG)
 v5, h5 = TV["v_post"], TH["v_post"]
 text(s, M, TOP - 0.02, W - 2 * M, 0.5, [[(f"Yes — +{v5['d']:.3f} R² on validation, and it holds out-of-sample: "
@@ -528,7 +598,7 @@ notes(s, "How the text was extracted: 8-K earnings-release exhibits (mostly EX-9
 # ======================================================================= 7. decision (text model, large caps)
 # Managerial use = attention triage on earnings night. No figures on this slide by design: the catch-rate numbers stay
 # in results_risk_limit_m1.csv (checked by verify_results.py) but are not shown.
-s = frame(7, "Does it matter? Triaging attention on earnings night")
+s = frame(8, "Does it matter? Triaging attention on earnings night")
 tag(s, SUB_TAG)
 TFLOW = [("Many names report tonight", "the desk can't deep-dive every one"),
          ("Rank them by predicted move", "a volatility forecast for each release"),
@@ -584,7 +654,7 @@ notes(s, "No figures on this slide by design. Managerial use: attention triage o
          "next step (no options data here).")
 
 # ======================================================================= 10. one earnings session (Convention B example)
-s = frame(8, "One earnings session: how the desk would use it")
+s = frame(9, "One earnings session: how the desk would use it")
 tag(s, SUB_TAG)
 GREEN, GREEN_BG = RGBColor(0x2E, 0x7D, 0x4F), RGBColor(0xE3, 0xF1, 0xE7)
 AMBER, AMBER_BG = RGBColor(0x9A, 0x5B, 0x00), RGBColor(0xFB, 0xEE, 0xDC)
@@ -668,7 +738,7 @@ notes(s, "Source: results_risk_limit_m1_session.csv (risk_limit_m1.py). Same mod
          "Company names from CRSP. Volatility is unsigned: '13%/day' is size, not direction.")
 
 # ======================================================================= 10. next / limitations
-s = frame(9, "What's next, and what we can't claim yet")
+s = frame(10, "What's next, and what we can't claim yet")
 box(s, M, TOP - 0.05, W - 2 * M, 0.72, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Reported card")
 text(s, M + 0.25, TOP - 0.05, W - 2 * M - 0.5, 0.72, [[("Holdout 2021–25, run once: ", {"bold": True, "color": BLUE}),
      (f"tabular ranking held, value-added ~halved · text confirmed (+{TH['v_post']['d']:.3f} vs "

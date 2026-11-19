@@ -248,6 +248,7 @@ vol_pipeline/data/processed/*
 !vol_pipeline/data/processed/build_log.txt
 !vol_pipeline/data/processed/text_subset_representativeness.csv
 !vol_pipeline/data/processed/trading_calendar_closes.csv
+!vol_pipeline/data/processed/example_rows_dev.csv
 
 # PDFs: only the deck PDF
 *.pdf
