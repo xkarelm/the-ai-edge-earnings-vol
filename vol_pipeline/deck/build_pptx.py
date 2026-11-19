@@ -288,7 +288,7 @@ text(s, W - M - 1.0, H - 0.55, 1.0, 0.36, ["1"], size=11, color=MUTED, align=PP_
 notes(s, "Every number in this deck is read from data/processed results files at build time (see deck/build_pptx.py). "
          "Holdout (2021-25) results: results_holdout.csv (tabular) and results_m1_v2.csv (text), each run once (slides 5, 6, 9). "
          "Decision results (slides 7-8): results_risk_limit_m1.csv and results_risk_limit_m1_session.csv (validation only) "
-         "plus results_risk_limit.csv (full sample). No appendix; key terms on slide 4, R² on slide 5, big move on slide 7.")
+         "plus results_risk_limit.csv (full sample). No appendix; key terms on slide 4, R² on slide 5, big move on slide 8.")
 
 # ======================================================================= 2. problem
 s = frame(2, "The problem: setting risk limits on earnings night")
@@ -524,46 +524,62 @@ notes(s, "How the text was extracted: 8-K earnings-release exhibits (mostly EX-9
          "Subsample medians: model_table rows of the text subset (dev + validation + holdout).")
 
 # ======================================================================= 7. decision (text model, large caps)
-# No figures on this slide by design: the catch-rate numbers stay in results_risk_limit_m1.csv (checked by
-# verify_results.py) but are not shown. Plain-language decision framing and the recommendation only.
-s = frame(7, "Does it matter? The risk-limit decision")
+# Managerial use = attention triage on earnings night. No figures on this slide by design: the catch-rate numbers stay
+# in results_risk_limit_m1.csv (checked by verify_results.py) but are not shown.
+s = frame(7, "Does it matter? Triaging attention on earnings night")
 tag(s, SUB_TAG)
-text(s, M, TOP, W - 2 * M, 0.45, ["Same alert budget for every model: the question is which names it flags"],
-     size=18, color=MUTED, name="Caption")
-DFLOW = [("Forecast tonight's volatility", "for every name reporting earnings"),
-         ("Flag the names most likely to move", "same number of alerts as today"),
-         ("Focus limits where the risk is", "attention and capital on the flagged names")]
-BW7, GAP7, BY7, BH7 = 3.65, 0.42, TOP + 0.65, 1.55
-for i, (head, sub) in enumerate(DFLOW):
+TFLOW = [("Many names report tonight", "the desk can't deep-dive every one"),
+         ("Rank them by predicted move", "a volatility forecast for each release"),
+         ("Scrutinize the top names first", "options, hedges, limits; skip the calm ones")]
+BW7, GAP7, BY7, BH7 = 3.65, 0.42, TOP + 0.05, 1.3
+for i, (head, sub) in enumerate(TFLOW):
     x = M + i * (BW7 + GAP7)
-    last = i == len(DFLOW) - 1
-    box(s, x, BY7, BW7, BH7, fill=BLUE if last else TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name=f"Decision flow {i + 1}")
-    text(s, x + 0.22, BY7 + 0.1, BW7 - 0.44, BH7 - 0.2, [[(head, {"bold": True, "size": 19, "color": WHITE if last else INK})],
-         [(sub, {"size": 15, "color": PALE if last else BODY})]], space_after=4, anchor=MSO_ANCHOR.MIDDLE,
-         line_spacing=1.0, name=f"Decision flow {i + 1} text")
-    if i < len(DFLOW) - 1:
+    last = i == len(TFLOW) - 1
+    box(s, x, BY7, BW7, BH7, fill=BLUE if last else TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name=f"Triage flow {i + 1}")
+    text(s, x + 0.22, BY7 + 0.08, BW7 - 0.44, BH7 - 0.16, [[(head, {"bold": True, "size": 18, "color": WHITE if last else INK})],
+         [(sub, {"size": 14, "color": PALE if last else BODY})]], space_after=4, anchor=MSO_ANCHOR.MIDDLE,
+         line_spacing=1.0, name=f"Triage flow {i + 1} text")
+    if i < len(TFLOW) - 1:
         text(s, x + BW7, BY7, GAP7, BH7, ["→"], size=28, bold=True, color=MUTED, align=PP_ALIGN.CENTER,
-             anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, name=f"Decision arrow {i + 1}")
-FY7 = BY7 + BH7 + 0.4
-text(s, M, FY7, W - 2 * M, 0.38, ["What we found"], size=14, bold=True, color=MUTED, name="Found label")
-text(s, M, FY7 + 0.42, W - 2 * M - 1.2, 1.3, [
-    [("Adding the earnings-release text flags more of the names that went on to make big moves, ", {"bold": True, "color": INK}),
-     ("with the same alert budget (large caps, validation period)", {})],
+             anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, name=f"Triage arrow {i + 1}")
+RY7 = BY7 + BH7 + 0.25
+LW7 = 6.55
+text(s, M, RY7, LW7, 0.36, ["Why it helps"], size=14, bold=True, color=MUTED, name="Why label")
+text(s, M, RY7 + 0.4, LW7, 1.75, [
+    [("Text adds what the numbers miss: ", {"bold": True, "color": INK}),
+     ("an independent input that adds to, not replaces, the desk's tools", {})],
+    [("Evidence: ", {"bold": True, "color": INK}),
+     ("at the same alert budget, the model catches more of the genuine big movers", {})],
     [("Scope: ", {"bold": True, "color": INK}),
-     ("big moves caught, not dollars; limit calibration was not measured", {})],
-], size=17, bullets=True, space_after=8, name="Found")
-box(s, M, 6.08, W - 2 * M - 1.2, 0.82, fill=None, line=BLUE, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Recommendation card")
-text(s, M + 0.25, 6.08, W - 2 * M - 1.7, 0.82, [[
+     ("large caps, validation period · big moves caught, not dollars", {})],
+], size=15, bullets=True, space_after=6, name="Why it helps")
+IX7 = M + LW7 + 0.35
+IW7 = W - M - IX7
+text(s, IX7, RY7, IW7, 0.36, ["Expected impact"], size=14, bold=True, color=MUTED, name="Impact label")
+for k, (head, body) in enumerate([("Reduced risk", "more genuine big movers flagged → fewer surprise limit breaches"),
+                                  ("Increased efficiency", "a prioritized watchlist → scarce attention goes where it matters")]):
+    yy = RY7 + 0.42 + k * 0.86
+    box(s, IX7, yy, IW7, 0.78, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name=f"Impact card {k + 1}")
+    text(s, IX7 + 0.2, yy, IW7 - 0.4, 0.78, [[(head + ": ", {"bold": True, "color": BLUE}), (body, {"color": INK})]],
+         size=15, anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, name=f"Impact {k + 1}")
+REC_Y, REC_H = 5.45, 1.32
+box(s, M, REC_Y, W - 2 * M - 1.2, REC_H, fill=None, line=BLUE, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Recommendation card")
+text(s, M + 0.25, REC_Y, W - 2 * M - 1.7, REC_H, [[
     ("Recommendation: ", {"bold": True, "color": BLUE}),
-    ("use the earnings-release text signal as an input to risk limits on liquid names, alongside the desk's "
-     "existing tools.", {"color": INK})]],
-    size=17, anchor=MSO_ANCHOR.MIDDLE, name="Recommendation")
-notes(s, "No figures on this slide by design. Recommendation: an input alongside the desk's existing tools, not a "
-         "replacement. The underlying decision test (same alert budget: each model flags its own top quarter of "
-         "forecasts; big move = top quarter of 2006-16 post-earnings volatility) is in results_risk_limit_m1.csv "
-         "(risk_limit_m1.py): large-cap text subsample, validation 2017-19 only, not run on the holdout. It measures big "
-         "moves caught, not dollars, and does not measure how well limits are calibrated. Full-sample tabular comparison: "
-         "results_risk_limit.csv.")
+    ("Use the text-based volatility forecast as an earnings-night triage tool: rank reporters by predicted move, "
+     "scrutinize and tighten limits on the top names, and treat sharp disagreements with the desk's existing view as a "
+     "flag to look closer. Benchmarking against options-implied volatility is the next step to quantify the edge in P&L "
+     "terms.", {"color": INK})]],
+    size=15, anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.05, name="Recommendation")
+notes(s, "No figures on this slide by design. Managerial use: attention triage on earnings night. The model (M1 = "
+         "B1b-GBM + earnings-release text) ranks tonight's reporters by predicted post-earnings volatility; the desk looks "
+         "at the top names first. It is an input that adds to, not replaces, the desk's existing tools. Evidence: the "
+         "decision test in results_risk_limit_m1.csv (risk_limit_m1.py): same alert budget (each model flags its own top "
+         "quarter of forecasts), big move = top quarter of 2006-16 post-earnings volatility; adding the text catches more "
+         "big movers. Large-cap text subsample, validation 2017-19 only, not run on the holdout. It measures big moves "
+         "caught, not dollars; limit breaches and P&L were not measured, so 'fewer surprise limit breaches' is the "
+         "expected effect, not a measured one. We do not claim to beat options-implied volatility: that benchmark is the "
+         "next step (no options data here).")
 
 # ======================================================================= 10. one earnings session (Convention B example)
 s = frame(8, "One earnings session: how the desk would use it")
@@ -623,14 +639,14 @@ tx = M + sum(cw) + 0.3
 tw = W - M - tx
 box(s, tx, TOP + 0.05, tw, 2.75, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Takeaway card")
 text(s, tx + 0.2, TOP + 0.17, tw - 0.4, 2.55, [
-    [("Model: B1b-GBM (no text), slide 7's rule", {"bold": True, "color": MUTED, "size": 13})],
+    [("Model: B1b-GBM (no text); flagged = top 25% of predicted volatility", {"bold": True, "color": MUTED, "size": 13})],
     [("Flagged 3 names; caught 1 of 2 big movers ", {"bold": True, "color": INK}),
      ("(Scientific Games, 13%/day); missed WebMD; 2 false alarms", {})],
     [("Honest mix: better aim, same alert budget", {"bold": True, "color": BLUE})],
 ], size=16, space_after=8, name="Takeaway")
 text(s, tx, TOP + 2.98, tw, 2.3, [
     [("Across all large-cap sessions: ", {"bold": True, "color": BODY}),
-     ("adding the text catches more big movers (slide 7)", {})],
+     ("adding the text catches more of the big movers on average", {})],
     [("With text (M1) on this session: ", {"bold": True, "color": BODY}),
      (f"flags {' and '.join(NAMES[t] for t in _m1f.ticker)}, misses both big movers. Text helps on average, "
       "not every session", {})]],
@@ -639,7 +655,7 @@ text(s, M, TOP + 0.05 + 0.5 + 0.37 * len(SESSION) + 0.18, sum(cw), 0.55, [
     "Big move > 4.86%/day (2006–16 top quartile); Hasbro, ManpowerGroup ~4.2%, just under · all released pre-open, "
     "2017-07-24"],
      size=14, italic=True, color=MUTED, name="Footnote")
-notes(s, "Source: results_risk_limit_m1_session.csv (risk_limit_m1.py). Same models and rule as slide 7: B1b-GBM and M1 "
+notes(s, "Source: results_risk_limit_m1_session.csv (risk_limit_m1.py). Same models and rule as the decision test (results_risk_limit_m1.csv): B1b-GBM and M1 "
          "fit on text-subset dev 2006-16; big move = v_post above the full-sample dev top-quartile cut-off "
          f"({D0.big_move_cutoff_daily_vol:.4%}/day); alert = the model's own top 25% of large-cap validation 2017-19 "
          f"predictions (B1b-GBM > {D0.flag_cutoff_daily_vol:.4%}/day). This table shows B1b-GBM (no text). M1 on the same "
