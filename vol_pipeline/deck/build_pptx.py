@@ -675,7 +675,7 @@ text(s, M + 0.25, TOP - 0.05, W - 2 * M - 0.5, 0.72, [[("Holdout 2021–25, run 
       f"+{TV['v_post']['d']:.3f} on validation)", {})]], size=18, anchor=MSO_ANCHOR.MIDDLE, name="Reported text")
 text(s, M, TOP + 0.8, 6.0, 0.4, ["Next"], size=14, bold=True, color=MUTED, name="Next label")
 for i, (head, body) in enumerate([
-        ("Extend the text layer", "Smaller names, where text coverage is thin"),
+        ("Extend the text layer", "Smaller names, outside the extraction screen"),
         ("Implied-volatility benchmark", "Needs options data")]):
     yy = TOP + 1.2 + i * 1.1
     box(s, M, yy, 6.1, 1.0, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name=f"Next {i + 1}")
@@ -689,10 +689,11 @@ text(s, 7.2, TOP + 1.2, W - M - 7.2, 3.9, [
     [("No options-implied-vol benchmark: ", {"bold": True, "color": INK}),
      ("our baseline is past realized vol, not the desk's implied vol", {})],
     [("Large caps only: ", {"bold": True, "color": INK}),
-     (f"where text coverage is (median ~${CAP_B:.1f}B, {ANALYSTS} analysts)", {})],
+     ("text collected under the extraction screen (price > $5, mkt cap > NYSE 20th pct, 3+ analysts; "
+      f"median ~${CAP_B:.1f}B, {ANALYSTS} analysts)", {})],
     "Tabular value-added ~halves out-of-sample (text gain did not)",
     "Big moves caught, not dollars",
-], size=17, bullets=True, space_after=10, name="Limitations")
+], size=16, bullets=True, space_after=8, name="Limitations")
 box(s, M, 6.02, W - 2 * M - 1.2, 0.9, fill=None, line=BLUE, shape=MSO_SHAPE.ROUNDED_RECTANGLE, name="Conclusion card")
 text(s, M + 0.25, 6.02, W - 2 * M - 1.7, 0.9, [[
     ("Does the earnings-release text add value beyond the numbers? ", {"color": BODY}),
