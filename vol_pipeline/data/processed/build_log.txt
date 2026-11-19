@@ -1,0 +1,157 @@
+
+==============================================================================
+1. EXPLORE
+==============================================================================
+
+--- event_table.csv: 383,153 rows x 16 cols
+cik                   int64
+company              object
+accession            object
+filing_date          object
+report_date          object
+acceptance_utc       object
+acceptance_et        object
+acceptance_source    object
+release_et           object
+session_date         object
+when                 object
+timing_flag          object
+items                object
+primary_document     object
+filing_dir_url       object
+event_id             object
+rows per event_id -> {1: 383153}
+when: {'after_close': 172833, 'pre_open': 144898, 'intraday': 65422}
+calendar: 5,073 days 2005-11-01..2025-12-31; not in NYSE schedule: 0; NYSE days missing: 0
+early closes: 45; extended 123 sessions past 2025-12-31 (window dates only)
+
+--- crsp_daily: 21 yearly files, 20,947,867 rows
+   permno:int64, date:timestamp[ns], dlyprc:double, dlyopen:double, dlyclose:double, dlyret:double, dlyretx:double, dlyretmissflg:string, dlydelflg:string, dlycap:double, shrout:int64, dlycumfacpr:double, dlycumfacshr:double, dlyvol:double, primaryexch:string, siccd:int64
+
+Rebuilding SUE with the part 3 method ...
+look-ahead check passed on 1,427,965 estimates
+                                                         step  remaining  removed  removed_pct
+            I/B/E/S quarterly EPS actuals announced 2006-2025     415483        0          0.0
+                            one announcement per firm-quarter     415300      183          0.0
+                                     actual EPS value present     351756    63544         15.3
+                                actual reported in US dollars     343267     8489          2.4
+linked to a CRSP permno on the announcement date (score <= 3)     332818    10449          3.0
+                            announcement time known (I/B/E/S)     332629      189          0.1
+           at least one point-in-time estimate within 90 days     269437    63192         19.0
+                           stock is a US common share in CRSP     221246    48191         17.9
+                                            CRSP price at t-2     217609     3637          1.6
+SUE rebuilt: 217,609 I/B/E/S events in 52s
+
+--- SUE (I/B/E/S events): 217,609 rows x 17 cols
+sue_event_id        string[python]
+ibes_ticker         string[python]
+permno                       int64
+pends               datetime64[ns]
+actual                     Float64
+R_et                        object
+R_date              datetime64[ns]
+reaction_date       datetime64[ns]
+t2_date             datetime64[ns]
+price_t2                   Float64
+consensus_median           Float64
+dispersion                 Float64
+n_analysts                   Int64
+est_latest_date     datetime64[ns]
+surprise                   Float64
+sue_price                  Float64
+sue_disp                   Float64
+rows per sue_event_id -> {1: 217609}
+
+Column mapping chosen:
+  event id           <- event_table: cik + '_' + accession
+  release timestamp  <- event_table: release_et
+  session            <- session_date recomputed from release_et + calendar (stored value kept as session_date_orig); when = event_table.when
+  daily returns      <- crsp_daily: dlyret (CRSP v2 total return, incl. delisting)
+  PERMNO             <- cik -> gvkey (link_cik_gvkey, valid links) -> permno (link_ccm LC/LU, P/C), as of release date
+  ticker             <- crsp_names: ticker as of release date
+  SUE                <- part 3 sue_price = (actual - median consensus) / price_t2 (primary); sue_disp alternative
+  market cap         <- crsp_daily: dlycap ($000) at pre_end -> log_mktcap
+  sector             <- crsp_daily: siccd at pre_end -> sic2, SIC division
+
+==============================================================================
+2. BUILD (rows remaining after each step)
+==============================================================================
+  [  383,153] 8-K earnings events in event_table
+  [  383,153] valid release_et
+  [  383,018] 20-day pre and 15-day post window inside CRSP calendar
+     note: stored session_date differs from recomputed for 75,359 events
+  [  345,858] CIK linked to a CRSP PERMNO as of release date
+  [  305,197] PERMNO present in CRSP daily (US common stock)
+  [  300,205] v_pre: >= 15 of 20 pre returns, non-zero vol
+  [  299,971] v_post_3: all 3 post returns present, non-zero vol
+  [  299,898] v_post: all 5 post returns present, non-zero vol
+  [  299,379] v_post_15: all 15 post returns present, non-zero vol
+     SUE: 201,646 filings linked to an I/B/E/S event; 76 unlinked by the leakage guard (estimate or t-2 price not before release); kept 201,570
+     SUE: I/B/E/S reaction session == 8-K session for 83.8%
+  [  168,906] primary: has SUE and 8-K / I/B/E/S agree on the session
+
+==============================================================================
+3. RESULT
+==============================================================================
+Rows per step:
+  8-K earnings events in event_table                                     383,153
+  valid release_et                                                       383,153  (-0)
+  20-day pre and 15-day post window inside CRSP calendar                 383,018  (-135)
+  CIK linked to a CRSP PERMNO as of release date                         345,858  (-37,160)
+  PERMNO present in CRSP daily (US common stock)                         305,197  (-40,661)
+  v_pre: >= 15 of 20 pre returns, non-zero vol                           300,205  (-4,992)
+  v_post_3: all 3 post returns present, non-zero vol                     299,971  (-234)
+  v_post: all 5 post returns present, non-zero vol                       299,898  (-73)
+  v_post_15: all 15 post returns present, non-zero vol                   299,379  (-519)
+  primary: has SUE and 8-K / I/B/E/S agree on the session                168,906  (-130,473)
+
+Final: 168,906 rows, 2006-01-03 .. 2025-12-10; with SUE: 168,906; with market cap: 168,905; with sector: 168,902
+
+Targets and v_pre (log daily vol):
+         v_post_3      v_post   v_post_15       v_pre
+count  168906.000  168906.000  168906.000  168906.000
+mean       -3.364      -3.439      -3.590      -3.808
+std         0.823       0.737       0.634       0.599
+min       -10.931      -8.678      -7.977      -7.456
+1%         -5.531      -5.270      -5.026      -5.065
+25%        -3.877      -3.911      -4.008      -4.218
+50%        -3.330      -3.426      -3.597      -3.844
+75%        -2.808      -2.944      -3.170      -3.428
+99%        -1.609      -1.801      -2.094      -2.274
+max         1.038       0.784       0.764       0.307
+
+corr:
+           v_post_3  v_post  v_post_15  v_pre
+v_post_3      1.000   0.948      0.817  0.463
+v_post        0.948   1.000      0.891  0.540
+v_post_15     0.817   0.891      1.000  0.665
+v_pre         0.463   0.540      0.665  1.000
+
+B1 features:
+       sue_price   sue_disp   log_mktcap
+count   168906.0   116605.0  168905.0000
+mean     -0.0088     1.2501      14.1903
+std       1.0238     9.0295       1.9525
+min    -271.6027 -1221.0864       7.0060
+1%       -0.1532   -10.9441       9.8601
+50%       0.0007       0.84      14.1358
+99%       0.0951    16.8961      18.9871
+max      20.6533   674.1116      22.2347
+when: {'after_close': 88355, 'pre_open': 80208, 'intraday': 343}
+sector: {'D_manufacturing': 67585, 'I_services': 35005, 'H_finance': 27001, 'E_transport_utilities': 12783, 'G_retail': 11350, 'B_mining': 6825, 'F_wholesale': 5484, 'C_construction': 2257, 'A_agri': 521, 'J_public_admin': 91, <NA>: 4}
+events per year: {2006: 6857, 2007: 7250, 2008: 7490, 2009: 7561, 2010: 7747, 2011: 7629, 2012: 7600, 2013: 7824, 2014: 7920, 2015: 8539, 2016: 8524, 2017: 8480, 2018: 8533, 2019: 8646, 2020: 8954, 2021: 9777, 2022: 10448, 2023: 10061, 2024: 9618, 2025: 9448}
+split: {'dev': 84941, 'validation': 25659, 'excluded_2020': 8954, 'holdout': 49352}
+v_post mean by split: {'dev': -3.515, 'excluded_2020': -3.23, 'holdout': -3.308, 'validation': -3.514}
+
+wrote to data/processed: model_table.parquet, model_table_all.parquet, event_windows.parquet, sue_ibes_events.parquet, trading_calendar_closes.csv
+
+Column mapping used:
+  event id           <- event_table: cik + '_' + accession
+  release timestamp  <- event_table: release_et
+  session            <- session_date recomputed from release_et + calendar (stored value kept as session_date_orig); when = event_table.when
+  daily returns      <- crsp_daily: dlyret (CRSP v2 total return, incl. delisting)
+  PERMNO             <- cik -> gvkey (link_cik_gvkey, valid links) -> permno (link_ccm LC/LU, P/C), as of release date
+  ticker             <- crsp_names: ticker as of release date
+  SUE                <- part 3 sue_price = (actual - median consensus) / price_t2 (primary); sue_disp alternative
+  market cap         <- crsp_daily: dlycap ($000) at pre_end -> log_mktcap
+  sector             <- crsp_daily: siccd at pre_end -> sic2, SIC division

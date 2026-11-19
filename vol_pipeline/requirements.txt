@@ -1,0 +1,17 @@
+# Versions the pipeline was built and checked with (Python 3.12).
+# Dataset build (run.py)
+pandas==2.2.2
+numpy==1.26.4
+pyarrow==14.0.2
+pandas_market_calendars==5.5.0
+# Baselines and text model (baselines_*.py, m1_text*.py, risk_limit_m1.py)
+scikit-learn==1.4.2
+lightgbm==4.7.0
+torch==2.10.0
+transformers==4.42.4
+beautifulsoup4==4.12.3
+# Figures and deck (notebooks/, deck/)
+matplotlib==3.8.4
+python-pptx==1.0.2
+lxml==5.2.1
+pillow==10.3.0
