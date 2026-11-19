@@ -10,8 +10,9 @@ earnings release** adds anything beyond the numbers.
   earnings-release text raises R² by **+0.024 on validation (2017–19)** and **+0.038 on a one-time holdout (2021–25)** (against the
   holdout's own mean; +0.035 against the dev mean). R² is the share of variation explained. Both 95% intervals are above
   zero, so the gain holds on years the model never saw.
-- **Scope:** large caps, median ~$3.7B market cap, 7 analysts. These are the events with extracted release text, not a
-  size cut-off (see [DEFINITIONS.md](DEFINITIONS.md#large-cap-subsample)).
+- **Scope:** large caps, median ~$3.7B market cap, 7 analysts. These are the events with extracted release text, which was
+  collected only for filings passing the extraction screen (price > $5, market cap above the NYSE 20th percentile, 3+
+  analysts; see [DEFINITIONS.md](DEFINITIONS.md#large-cap-subsample)).
 
 ## What's in this repo
 

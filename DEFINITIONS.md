@@ -88,10 +88,14 @@ Every text result is measured on this subsample: M1, the text-gain intervals, an
 - **What it is:** the primary-sample events whose release text was extracted and cached in step 5. In other words, the
   event's accession is in `raw_manifest.parquet` and has a cleaned text in `clean_YYYY.parquet`. Rows: 44,739 dev,
   14,614 validation, 27,629 holdout. `[m1_text_v2.py: accession_map, subset_rows]`
-- **What it is not:** a size cut-off. No market-cap, price or analyst filter was applied to select it.
-- **Why "large-cap":** the events with text happen to be large, well-covered firms: median market cap ~$3.7B and 7
-  analysts, against a median of 2 analysts for primary-sample events without text. This is an observed property of text
-  coverage, not a filter we applied. These medians are computed from `model_table.parquet` (licensed, not committed), so
-  `verify_results.py` does not check them. `[deck/build_pptx.py]`
+- **How it is selected:** it inherits stage 1's extraction screen. Release text was downloaded only for the filings in
+  `matched_sample.csv`, which keeps filings with price above $5 at t−2, market cap at t−2 above that year's NYSE 20th
+  percentile, and at least 3 analysts in the prior 90 days. Step 5's text cache is built from that download, so every
+  event with text passed the screen. `[pipeline_extraction/1_events/code/wrds_match_and_funnel.py]`
+- **Why "large-cap":** because of that screen, the subsample is large, well-covered firms: median market cap ~$3.7B and
+  7 analysts, against a median of 2 analysts for primary-sample events without text (many of which fail the 3-analyst
+  minimum). The tabular models (B0 to B1b-GBM) use the full primary sample, which does not apply this screen. These
+  medians are computed from `model_table.parquet` (licensed, not committed), so `verify_results.py` does not check
+  them. `[deck/build_pptx.py]`
 - **Earlier version:** `baselines_textsubset.py` (dev and validation only) uses the same idea, with step 5's raw archives
   for 2006–18.

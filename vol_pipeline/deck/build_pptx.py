@@ -389,8 +389,10 @@ for num, head, body in rungs:
 text(s, M, 5.55, W - 2 * M, 0.95, [[("Scope: ", {"bold": True, "color": BLUE}),
      ("B0–B1b-GBM full market; M1 large-cap subset, incl. one-time 2021–25 holdout", {})],
      [("Why large-cap: ", {"bold": True, "color": BLUE}),
-      (f"Text coverage is concentrated in large, well-covered firms (median ~${CAP_B:.1f}B market cap, {ANALYSTS} analysts, "
-       f"vs {ANALYSTS_OUT} outside it) — the desk's liquid-names universe.", {})]], size=14, space_after=4, name="Scope line")
+      ("text was collected only for filings passing the extraction screen (price > $5, market cap > NYSE 20th "
+       f"percentile, 3+ analysts): large, well-covered firms (median ~${CAP_B:.1f}B, {ANALYSTS} analysts vs "
+       f"{ANALYSTS_OUT} outside), the desk's liquid names.", {})]],
+     size=14, space_after=4, name="Scope line")
 picture(s, FIG / "02_vpre_vs_vpost.png", W - M - 4.85, TOP + 0.6, w=4.85, name="Figure: v_pre vs v_post")
 text(s, M, 6.62, W - 2 * M, 0.3, ["v_pre / v_post = log realized volatility 20 days before / 5 days after the release; "
      "SUE = earnings surprise ÷ price; FinBERT = financial language model; PCA = feature compression."],
