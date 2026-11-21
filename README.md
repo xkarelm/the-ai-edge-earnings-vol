@@ -35,8 +35,9 @@ explains the naming.
 cd vol_pipeline && python verify_results.py      # needs only pandas
 ```
 
-The script recomputes all 50 headline numbers in the deck from the committed results files and prints each next to the
-figure shown on the slide (OK or MISMATCH). It is the quickest way to confirm the claims.
+The script recomputes 50 reported numbers from the committed results files (the 37 shown on the deck slides, 2 from the
+speaker notes and 11 from the results files) and prints each next to the expected figure (OK or MISMATCH). It is the
+quickest way to confirm the claims.
 
 ## The data
 

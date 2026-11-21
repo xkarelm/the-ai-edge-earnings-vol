@@ -103,7 +103,7 @@ definitions: [DEFINITIONS.md](../DEFINITIONS.md). Results go to `data/processed/
 | `m1_text_v2.py` | **M1** = B1b-GBM + release text (FinBERT → PCA), validation and holdout, with bootstrap intervals | `results_m1_v2.csv` |
 | `m1_text.py` | Earlier text layer (2006–18 only); kept for shared helpers and the result the deck cites | `results_m1.csv` (superseded) |
 | `risk_limit_m1.py` | Decision test, M1 vs B1b-GBM (large-cap subsample, validation) and the one-session example | `results_risk_limit_m1.csv`, `results_risk_limit_m1_session.csv` |
-| `verify_results.py` | Checks all 50 headline deck numbers against the files above; needs only pandas | — |
+| `verify_results.py` | Checks 50 reported numbers (37 on the deck slides, 2 in the speaker notes, 11 from the results files) against the files above; needs only pandas | — |
 | `deck/build_pptx.py`, `deck/pptx_to_pdf.py` | Build the deck (`deck/pitch_deck.pptx`, then PDF). The sample medians (~$3.7B, 7 analysts) are read from `model_table.parquet`, which is licensed and not committed | `deck/pitch_deck.pptx` |
 | `deck/data_pipeline.dot.py`, `deck/plots_pred_timing.py` | Deck figures | `notebooks/figures/*.png` |
 
