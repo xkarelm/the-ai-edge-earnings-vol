@@ -5,7 +5,8 @@ The exact definition of every key quantity, taken from the code (source file in 
 
 ## Volatility
 
-**Realized volatility**: how much the stock swung per day, on a log scale.
+**Realized volatility**: how much the stock swung per day, on a log scale: the square root of the average squared daily
+return over a window (roughly, the typical daily move), then logged.
 
     v = ln( √( mean of r_t² ) )        r_t = CRSP daily total return (dlyret)
 
@@ -22,6 +23,9 @@ comes *after* the release time. All 5 returns must be present.
 `[pipeline/windows.py, config.py: PRE_DAYS=20, MIN_PRE_OBS=15]`
 
 ## Earnings surprise (SUE)
+
+SUE (standardized unexpected earnings): how far actual earnings per share (EPS) came in from what analysts expected,
+scaled by the share price.
 
     sue_price = (actual EPS − median analyst estimate) ÷ share price two sessions before the reaction day
 
@@ -43,7 +47,7 @@ All of these are known before the release. `[pipeline/build.py, pipeline/sue.py]
 | Feature | Definition |
 |---|---|
 | **log_mktcap** | Natural log of CRSP market value (`dlycap`, in $000s) on the last trading day before the release |
-| **sector** | SIC division (agriculture, mining, construction, manufacturing, transport and utilities, wholesale, retail, finance, services, public administration), from the CRSP SIC code |
+| **sector** | SIC (Standard Industrial Classification) division (agriculture, mining, construction, manufacturing, transport and utilities, wholesale, retail, finance, services, public administration), from the CRSP SIC code |
 | **when** | Release timing from the filing's acceptance time: `pre_open` (before 09:30 ET), `intraday`, `after_close` (16:00 ET or later) `[pipeline_extraction/1_events/code/build_event_table.py]` |
 | **n_analysts** | Number of analysts in the point-in-time consensus used for SUE |
 
@@ -67,7 +71,8 @@ There are two benchmark means:
 - **Holdout:** the holdout's own average (`R2_vs_own_mean`). 2021–25 is more volatile than 2006–16, so measuring against
   the old average would inflate R². The 2006–16-mean versions are reported alongside.
 
-Text-gain 95% intervals come from a paired bootstrap that resamples whole trading days.
+Text-gain 95% intervals come from a paired bootstrap: trading days are resampled 1,000 times (whole days, because events
+on the same day move together), both models are scored on the same resample, and the middle 95% of the gains is the interval.
 
 ## Models
 
@@ -85,11 +90,12 @@ once). `[config.py, pipeline/sue.py: split_of]`
 
 Every text result is measured on this subsample: M1, the text-gain intervals, and the M1 decision test.
 
-- **What it is:** the primary-sample events whose release text was extracted and cached in step 5. In other words, the
-  event's accession is in `raw_manifest.parquet` and has a cleaned text in `clean_YYYY.parquet`. Rows: 44,739 dev,
+- **What it is:** the primary-sample events (those where the 8-K and I/B/E/S place the release in the same trading
+  session; see `vol_pipeline/README.md`) whose release text was extracted and cached in step 5: the event's accession
+  (the filing's EDGAR ID) is in `raw_manifest.parquet` and has a cleaned text in `clean_YYYY.parquet`. Rows: 44,739 dev,
   14,614 validation, 27,629 holdout. `[m1_text_v2.py: accession_map, subset_rows]`
 - **How it is selected:** it inherits stage 1's extraction screen. Release text was downloaded only for the filings in
-  `matched_sample.csv`, which keeps filings with price above $5 at t−2, market cap at t−2 above that year's NYSE 20th
+  `matched_sample.csv`, which keeps filings with price above $5 at t−2 (two sessions before the reaction day), market cap at t−2 above that year's NYSE 20th
   percentile, and at least 3 analysts in the prior 90 days. Step 5's text cache is built from that download, so every
   event with text passed the screen. `[pipeline_extraction/1_events/code/wrds_match_and_funnel.py]`
 - **Why "large-cap":** because of that screen, the subsample is large, well-covered firms: median market cap ~$3.7B and

@@ -2,7 +2,7 @@
 
 Part of the team's data-extraction pipeline (see `pipeline_extraction/README.md`).
 
-This folder turns the 8-K documents chosen in parts 1–2 into the inputs every later part reads: one cleaned text per filing, the pieces each model reads, a cache of model outputs, duplicate flags, and the chronological splits with the frozen test set. Everything is keyed by `accession` and covers every filing. Samples are filters applied downstream, never deletions here.
+This folder turns the 8-K documents chosen in parts 1–2 into the inputs every later part reads: one cleaned text per filing, the pieces each model reads, a cache of model outputs, duplicate flags, and the chronological splits with the frozen test set. Everything is keyed by `accession` (the filing's EDGAR ID) and covers every filing. Nothing is deleted here; samples are chosen later, with filters.
 
 ## Layout
 
@@ -37,7 +37,7 @@ This folder turns the 8-K documents chosen in parts 1–2 into the inputs every 
 | `02_clean_prepare` | `cache/raw/`, parts 3–4 | everything in `data/`, `cache/model_outputs.sqlite`, `results/token_quantiles.csv`, `manifest.json` | 12 h 30 for a full run on a 4-core laptop (3 workers, 7–8 November): cleaning 10 h 45 (recent documents are about three times heavier than 2006's), entities 3 min, tokens 1 h 25 to 1 h 50, duplicates 15 min, the rest under a minute; reruns skip what is up to date |
 | `python code/splits.py --freeze` | `data/splits_draft.parquet`, part 4's `events_final.parquet` | `data/holdout_ids.txt`, `.sha256`, `holdout_freeze.json` | once, at the end |
 
-Every step can be stopped and rerun. `cache_raw.py` commits its archives every 500 documents and retries failed downloads on the next run. `clean_release.py` keeps every document already cleaned with the current `CLEAN_VERSION` and cleans only those its year lacks, so documents added by a later download take minutes, not the full pass. `token_stats.py` keeps the pieces of a text while they match it (its hash and cleaning version) and the window settings, and cuts only new or changed texts. `ModelCache` never pays for the same call twice.
+Every step can be stopped and rerun. `cache_raw.py` commits its archives every 500 documents and retries failed downloads on the next run. `clean_release.py` keeps every document already cleaned with the current `CLEAN_VERSION` and cleans only those its year lacks, so documents added by a later download take minutes, not the full pass. `token_stats.py` keeps the pieces of a text while they match it (its hash and cleaning version) and the window settings, and cuts only new or changed texts. `ModelCache` never runs the same model call twice.
 
 Inputs (read, never changed):
 
@@ -67,10 +67,10 @@ Set `TEAM_DIR` when the private data live outside the checkout. The Llama 3.1 to
 - The charset is read from the document, and leftover replacement characters are counted.
 - A document that opens with a closing tag (`</head>` with no `<head>`, as some word processors export) is read in full. lxml returned it empty: 39 releases had no text in v2.
 - A release filed as a PDF is read with pypdf (6 documents), not decoded as text.
-- Hidden iXBRL is removed.
+- Hidden iXBRL (machine-readable tags embedded in the filing) is removed.
 - Paragraphs are kept.
-- Financial tables are set aside in `fin_tables`, not deleted. A table counts as financial on the 30% digit rule or the shape of a statement. Layout tables stay text.
-- Page furniture and repeated content are removed and counted.
+- Financial tables are set aside in `fin_tables`, not deleted. A table counts as financial if digits make up more than 30% of its letters and digits, or if it has the shape of a financial statement. Layout tables stay text.
+- Page furniture (page numbers, "-more-", end marks such as "###") and repeated content are removed and counted.
 - Standard sections are labelled, not deleted. `text_body` is what the scorers read.
 - A heading opens or closes a section. In the safe harbor, a factor listed on its own line ("• the loss of key suppliers; and") stays in the safe harbor even when it is short enough to pass for a heading; in v2 it closed it, and the rest of the risk factors went to the body.
 - A safe harbor at the top of a transcript or a slide deck is followed by no heading. When the safe harbor holds more than half the words, the text is labelled again with a stricter rule: the safe harbor ends at the first paragraph that is not short (40 words), not a list item, and not in its vocabulary. In v2, 20 such texts had an empty body and about 600 kept under a fifth of their words.

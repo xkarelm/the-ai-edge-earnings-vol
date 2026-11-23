@@ -1,7 +1,8 @@
 # vol_pipeline — post-earnings volatility dataset
 
-Builds the modeling table for predicting **realized volatility after 8-K earnings releases** (magnitude, not returns), then
-runs the model ladder and writes the results (see [Models](#models)). Everything runs from this folder: code, inputs, outputs
+Builds the modeling table for predicting **realized volatility after 8-K earnings releases** (8-K: the SEC filing that
+carries the release; we predict the size of the move, not its direction), then runs the model ladder and writes the
+results (see [Models](#models)). Everything runs from this folder: code, inputs, outputs
 and tests.
 
 ## Run
@@ -15,10 +16,10 @@ python run.py                   # about 1.5 minutes; add --rebuild-sue to recomp
 python -m unittest discover -s tests
 ```
 
-`setup_inputs.py` does not run standalone in this repository. Its default sources (`SETUP_SOURCES` in `config.py`) point to a
-data-folder layout that is not part of this repo, so a plain `python setup_inputs.py` stops with "not found". Follow
-[REPRODUCE.md](../REPRODUCE.md), step 2: put the two CSVs in `data/raw/` yourself, then pass `--from-cache` with the step 3–4
-WRDS cache. The script skips files already in `data/raw/`, so only the cache is copied.
+A plain `python setup_inputs.py` stops with "not found": its default sources (`SETUP_SOURCES` in `config.py`) point to the
+team's data-folder layout, which is not in this repo. Instead, follow [REPRODUCE.md](../REPRODUCE.md), step 2: put the two
+CSVs in `data/raw/` yourself, then run it with `--from-cache` and the step 3–4 WRDS cache. Files already in `data/raw/` are
+skipped, so only the cache is copied.
 
 On macOS the copies are APFS clones and take no extra disk space. `data/` is git-ignored because it holds licensed WRDS data.
 
@@ -43,7 +44,7 @@ On macOS the copies are APFS clones and take no extra disk space. `data/` is git
 
 **Windows.** Windows are computed from `release_et` and the trading calendar, never from calendar days.
 
-- **Post window:** starts at the first session whose 09:30 open is after `release_et`. That is D for a pre_open release, D+1 for intraday or after_close, and the next trading day for a weekend or holiday release.
+- **Post window:** starts at the first session whose 09:30 open is after `release_et`. That is the release day (D) for a pre_open release, D+1 for intraday or after_close, and the next trading day for a weekend or holiday release.
 - **Pre window:** the 20 sessions ending at the last close before `release_et`, with early closes respected.
 - **Intraday releases:** day D is in neither window.
 - **Checks:** the build stops with an error if the windows overlap or fall on the wrong side of the release.
@@ -55,19 +56,21 @@ On macOS the copies are APFS clones and take no extra disk space. `data/` is git
 
 **Features (B1).** All are known before the release.
 
-- `sue_price`: (actual − median point-in-time consensus) / price at t−2. This is part 3's primary definition. `sue_disp` is the alternative.
+- `sue_price` (the earnings surprise): (actual − median point-in-time consensus) / price at t−2. Point-in-time means only
+  analyst estimates available before the release; t−2 is two sessions before the reaction day. This is part 3's primary
+  definition; `sue_disp` is the alternative.
 - `log_mktcap` and `sector` (SIC division): taken on the last trading day before the release.
 - `when`: pre_open, intraday or after_close.
 
 **Linking.**
 
-- **8-K → stock:** CIK → gvkey → PERMNO through the CRSP–Compustat link tables, valid on the release date.
+- **8-K → stock:** CIK → gvkey → PERMNO (the SEC, Compustat and CRSP company identifiers) through the CRSP–Compustat link tables, valid on the release date.
 - **8-K → SUE:** same PERMNO, with the filing 1 day before to 4 days after the IBES release.
 - **SUE guard:** every analyst estimate and the t−2 price must predate the 8-K.
 
-**Primary sample.** Only events where the 8-K and IBES put the release in the same session. Otherwise the press release came out before the 8-K, and `release_et` would not be when the news became public.
+**Primary sample.** Only events where the 8-K and IBES put the release in the same session. When they disagree, the press release came out before the 8-K, so `release_et` would not be when the news became public.
 
-**Splits.** These are the team's, by year of `session_date`: dev 2006–16, validation 2017–19, excluded_2020, holdout 2021–25. Apply the holdout lock before any analysis.
+**Splits.** The team's splits, by year of `session_date` (the reaction session): dev 2006–16, validation 2017–19, 2020 excluded (`excluded_2020`), holdout 2021–25. Apply the holdout lock (keep 2021–25 rows out) before any analysis.
 
 ## Outputs (`data/processed/`)
 
@@ -110,6 +113,6 @@ definitions: [DEFINITIONS.md](../DEFINITIONS.md). Results go to `data/processed/
 ## Known limits
 
 - **No wire clock:** IBES announcement times stand in for the Dow Jones wire clock in SUE, because the wire file is not available.
-- **No winsorizing:** the lowest targets come from illiquid stocks.
+- **No winsorizing:** extreme target values are not clipped; the lowest come from illiquid stocks.
 - **Intraday is nearly absent** from the primary sample (343 rows), because most intraday 8-Ks follow an earlier press release.
 - **The holdout is more volatile:** mean `v_post` is −3.31 in 2021–25, against −3.51 in dev.

@@ -7,7 +7,8 @@ This folder builds the event-level financial data the rest of the project is mea
 - **the event list:** quarterly earnings announcements, 2006–2025, linked to CRSP;
 - **the release time** of each event (wire first, I/B/E/S as the check);
 - **the earnings surprise (SUE):** actual EPS against the analyst consensus;
-- **abnormal returns:** returns around each event (definitions below).
+- **abnormal returns:** returns around each event beyond what the market and standard risk factors predict (definitions
+  below).
 
 ## Layout
 
@@ -58,7 +59,7 @@ When the corrected release clock (wire / EDGAR header times, part 1) is ready, p
 
 **Consensus.** Each analyst's latest unadjusted EPS estimate for the same fiscal quarter, with ANNDATS and ACTDATS both before R's date, issued within 90 days, in US dollars, from a broker that had not stopped covering the firm before R. Estimates are put on the actual's share basis with CRSP's cumulative share factor. Consensus is the median.
 
-**SUE.** (actual − median consensus) / price at t−2 (primary); (actual − median) / dispersion when 3+ analysts (alternative). Not winsorised at construction.
+**SUE.** (actual − median consensus) / price at t−2 (primary); (actual − median) / dispersion when 3+ analysts (alternative). Not winsorised (extreme values are not clipped) when built.
 
 **Returns.** Expected return from Fama-French three factors plus momentum, betas over trading days −280 to −31 (at least 120 returns), intercept not used.
 - `car_0_1`: abnormal return on days 0 and +1, the reaction (descriptive).
@@ -68,7 +69,7 @@ When the corrected release clock (wire / EDGAR header times, part 1) is ready, p
 - Market-adjusted versions as robustness.
 - Delisting returns are compounded with that day's return. A 60-day window past CRSP's last date is left missing.
 
-**Sample (04).** Rules are flags, not deletions. `in_primary` = 3+ analysts, price above $5 at t−2, linked to an 8-K in the filing sample (filed between one day before and four days after the release), wire and I/B/E/S agreeing on the session, and a reaction return. `f_size` (NYSE 20th percentile at the latest month-end) is a flag for robustness, not a cut. `timing_suspect` marks I/B/E/S-only intraday times. `basis_suspect` marks events whose I/B/E/S actual equals Compustat GAAP EPS while the consensus sits much closer to operating EPS (a probable basis mismatch).
+**Sample (04).** Rules are flags, not deletions. `in_primary` = 3+ analysts, price above $5 at t−2, linked to an 8-K in the filing sample (filed between one day before and four days after the release), wire and I/B/E/S agreeing on the session, and a reaction return. `f_size` (NYSE 20th percentile at the latest month-end) is a flag for robustness, not a cut here. (Release text, and so the text model, is limited by part 1's extraction screen, which does apply a size cut; see `DEFINITIONS.md`, Large-cap subsample, at the repository root.) `timing_suspect` marks I/B/E/S-only intraday times. `basis_suspect` marks events whose I/B/E/S actual equals Compustat GAAP EPS while the consensus sits much closer to operating EPS (a probable basis mismatch).
 
 **Splits.** By reaction date: development 2006–2016, validation 2017–2019, 2020 excluded, holdout 2021–2025. `common.guard_holdout` drops holdout rows from any analysis unless `UNLOCK_HOLDOUT=1` is set, which should happen once, after the freeze.
 

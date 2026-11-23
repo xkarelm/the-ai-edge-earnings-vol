@@ -3,8 +3,8 @@
 For the fast check of every reported number, which needs no WRDS access, run `cd vol_pipeline && python verify_results.py`
 (see the [README](README.md)). This file covers the full rebuild from WRDS and EDGAR.
 
-**Honest status:** every input can be obtained with the credentials below, but the run is partly manual, and a fresh WRDS
-pull matches the results only approximately (see the notes on data versions).
+**Status:** every input can be obtained with the credentials below, but some steps are manual, and a fresh WRDS pull
+matches the results only approximately (see Data versions below).
 
 **Data sources**
 - **WRDS tables:** `crsp.dsf_v2`, `crsp.stocknames_v2`, `crsp.ccmxpf_lnkhist`, `wrdssec.wciklink_gvkey`, `wrdsapps.ibcrsphist`,
@@ -18,12 +18,12 @@ pull matches the results only approximately (see the notes on data versions).
 
 | Variable | Used by |
 |---|---|
-| `WRDS_USERNAME` | `1_events/code/` WRDS scripts (`wrds_match_and_funnel.py` takes `--user`). The step 3–4 notebooks prompt for the username. The password and Duo are always prompted |
+| `WRDS_USERNAME` | `1_events/code/` WRDS scripts (`wrds_match_and_funnel.py` takes `--user`). The step 3–4 notebooks prompt for the username. The password and the Duo (two-factor) approval are always asked for interactively |
 | `SEC_USER_AGENT` | Every EDGAR download (`1_events/code/`, `5_data_cleaning/code/cache_raw.py`, `2_text_extraction`) |
 | `TEAM_DIR`, `PROJECT_DIR`, `STEP5_DIR` | Point the extraction code at its data folders. See `pipeline_extraction/README.md` |
-| `HF_TOKEN` | Optional: the gated Llama tokenizer in step 5's token counts. FinBERT-tone is public, but embedding downloads it, so internet access is needed |
+| `HF_TOKEN` | Optional: only for the gated Llama tokenizer in step 5's token counts. FinBERT-tone needs no token, but the embedding step downloads it, so it needs internet access |
 
-**Environments:** these differ, so use separate environments.
+**Environments:** the steps need different Python and numpy versions, so use a separate environment for each.
 - **Modeling:** `vol_pipeline/requirements.txt` (Python 3.12, numpy 1.26).
 - **Steps 3–4:** `pipeline_extraction/3_4_surprise_returns/requirements.txt` (Colab, Python 3.13, numpy 2.x).
 - **Steps 1 and 5:** have no requirements file. They need `wrds`, `pandas`, `pyarrow`; step 5 also needs `nltk` and `datasketch`.
@@ -73,8 +73,8 @@ python verify_results.py && python -m unittest discover -s tests
 - **`ccm_link.csv` is a manual WRDS export, not produced by any script.** It is the CRSP/Compustat Merged link history with
   each gvkey's CIK, with columns `cik, gvkey, LPERMNO, LINKPRIM, LINKDT, LINKENDDT`, for example `crsp.ccmxpf_lnkhist`
   joined to the Compustat company header on gvkey. The script keeps `LINKPRIM` P and C.
-- **`project_paths.py`** is not included in this repository and must be supplied. The step 5 notebooks need it; the step 5 scripts above do not. A supplied
-  `scripts/project_paths.py` must read the repository root from the **`DATA_ROOT`** environment variable and define `REPO_ROOT`,
+- **`project_paths.py`** is not in this repository. Only the step 5 notebooks need it (the step 5 scripts above do not).
+  To run them, supply a `scripts/project_paths.py` that reads the repository root from the **`DATA_ROOT`** environment variable and defines `REPO_ROOT`,
   `TEAM_DIR`, `NOV2_DATA`, `STEP5_DIR` and `STEP5_CODE` (see `pipeline_extraction/README.md`).
 - **Holdout guard:** `baselines_holdout.py final` refuses to run while `results_holdout.csv` exists, and that file is committed.
   Move it aside to rerun the one-time holdout.

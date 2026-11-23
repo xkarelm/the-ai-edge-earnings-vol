@@ -1,11 +1,10 @@
 # pipeline_extraction: building the event data (parts 1–5)
 
 This folder holds the **code and notebooks** that built the event table, the release timing, the earnings surprise and
-returns, and the cleaned 8-K text that `vol_pipeline/` models. It is a code-only copy of the team's pipeline folders. No
-data is included. WRDS (CRSP, I/B/E/S) data is licensed and stays outside git, under `data/` (git-ignored).
+returns, and the cleaned 8-K text that `vol_pipeline/` models. It is a code-only copy of the team's pipeline folders: no
+data is included, because WRDS (CRSP, I/B/E/S) data is licensed. It stays outside git, under `data/` (git-ignored).
 
-Notebook outputs were cleared in these copies, because several had printed WRDS rows. Each subfolder's own `README.md`
-gives the full details of its step.
+Notebook outputs were cleared, because several had printed WRDS rows. Each subfolder's `README.md` details its step.
 
 ## Pipeline order
 
@@ -57,24 +56,26 @@ and year in `cache/` and are never committed.
 Their data paths are now the placeholder `path/to/data/...` (in steps 3–4, `TEAM_DIR = Path("path/to/data")`).
 Replace it with your local data folder before running. The `.py` code reads the environment variables above.
 
-**Missing `project_paths.py`.** The three `5_data_cleaning` notebooks find their folders by
-importing `scripts/project_paths.py` from the data root, and that file is not included in this repository. `5_data_cleaning/code/settings.py`
-applies the same path rules, so the step 5 code works with `TEAM_DIR`/`STEP5_DIR` set. To run the notebooks, supply
-`project_paths.py` (interface below; see also `REPRODUCE.md`), or replace their path cell with `from settings import TEAM_DIR, NOV2_DATA, STEP5_DIR`.
+**Missing `project_paths.py`.** The three `5_data_cleaning` notebooks find their folders by importing
+`scripts/project_paths.py` from the data root, and that file is not in this repository. The step 5 `.py` code does not need
+it: `5_data_cleaning/code/settings.py` applies the same path rules from `TEAM_DIR`/`STEP5_DIR`. To run the notebooks, either
+supply `project_paths.py` (interface below; see also `REPRODUCE.md`), or replace their path cell with
+`from settings import TEAM_DIR, NOV2_DATA, STEP5_DIR`.
+
 **Interface for a supplied `scripts/project_paths.py`:** it must read the repository root from the **`DATA_ROOT`**
 environment variable (the notebooks search upward from `DATA_ROOT`, or the current folder, for `scripts/project_paths.py`,
 then set `DATA_ROOT` for the scripts they start). It must define `REPO_ROOT`, `TEAM_DIR`, `NOV2_DATA`, `STEP5_DIR` and `STEP5_CODE`.
 
 ## Part 1 scripts (`1_events/code/`)
 
-`5_data_cleaning/code/settings.py` expects the Part 1 scripts in `1_events/code/`. They are now there: the team's final
-`scripts/` folder, copied as is:
+`1_events/code/` holds the team's final Part 1 `scripts/` folder, copied as is (`5_data_cleaning/code/settings.py` expects
+them here):
 
 `check_access.py`, `build_event_table.py`, `fetch_acceptance.py`, `wrds_match_and_funnel.py`, `fetch_releases.py`,
 `wire_times.py`, `three_source_timing.py`, `validate_timing.py`, `funnel_counts.py`.
 
 `1_events/code/` is the canonical version. `1_events/1_Nov_2_DATA.ipynb` no longer carries `%%writefile` copies of these
-scripts; a markdown cell points here instead. With this folder in place, every step of the run order above has its code.
+scripts; a markdown cell points here instead.
 
 The only edits to the team's code remove personal details:
 - a hard-coded WRDS username became `os.environ.get("WRDS_USERNAME")` (`check_access.py`, `wire_times.py`, `validate_timing.py`);
