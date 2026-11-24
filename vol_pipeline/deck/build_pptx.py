@@ -203,6 +203,16 @@ def text(s, x, y, w, h, paras, size=18, color=BODY, bold=False, bullets=False, a
     return tb
 
 
+REPO_URL = "https://github.com/xkarelm/the-ai-edge-earnings-vol"
+
+
+def repo_line(s, x, y, w, label, size, name):
+    """A muted one-line pointer to the repository; the URL run is a clickable hyperlink in the PPTX."""
+    tb = text(s, x, y, w, 0.3, [[(label, {}), (REPO_URL.removeprefix("https://"), {})]], size=size, color=MUTED, name=name)
+    tb.text_frame.paragraphs[0].runs[-1].hyperlink.address = REPO_URL
+    return tb
+
+
 def picture(s, path, x, y, w=None, h=None, name=None):
     if h is not None and w is None:
         iw, ih = Image.open(path).size
@@ -285,6 +295,7 @@ text(s, M + 0.3, 3.72, 11.8, 0.95, ["Does the earnings release add signal beyond
      size=24, color=BLUE, name="Subtitle")
 text(s, M + 0.3, 5.3, 11.8, 0.95, ["Sacha Elalouf · Karel Moryoussef · Ana Cioata · Ghadi Ghaddaf", "November 2026"],
      size=18, color=BODY, space_after=6, name="Authors and date")
+repo_line(s, M + 0.3, 6.3, 11.8, "Code & README: ", 14, "Repository link")
 text(s, W - M - 1.0, H - 0.55, 1.0, 0.36, ["1"], size=11, color=MUTED, align=PP_ALIGN.RIGHT, name="Page number")
 notes(s, "Every number in this deck is read from data/processed results files at build time (see deck/build_pptx.py). "
          "Holdout (2021-25) results: results_holdout.csv (tabular) and results_m1_v2.csv (text), each run once (slides 6, 7, 10). "
@@ -781,6 +792,7 @@ text(s, M + 0.25, 6.02, W - 2 * M - 1.7, 0.9, [[
     (f"Yes: +{TV['v_post']['d']:.3f} R² on validation, +{TH['v_post']['d']:.3f} on the 2021–25 holdout; "
      "strongest at short horizons; large-cap names.", {"bold": True, "color": BLUE})]],
     size=16, anchor=MSO_ANCHOR.MIDDLE, name="Conclusion")
+repo_line(s, M, 7.02, 8.0, "Repository: ", 12, "Repository link")
 notes(s, "Reported line: results_holdout.csv (tabular) and results_m1_v2.csv (text, v_post, holdout gain vs own mean). "
          "Implied vol: we have no options data, so every model is benchmarked against past realized volatility; testing "
          "against the desk's implied vol is the first next step. "
