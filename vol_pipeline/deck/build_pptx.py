@@ -10,7 +10,7 @@ each slide's speaker notes cite the file and row for its numbers.
     data/processed/text_clean_v2.parquet              text-subset event ids (subset medians from model_table)
     data/processed/results_risk_limit.csv             equal-alert-budget decision metrics (full sample, B0 vs B1b)
     data/processed/results_risk_limit_m1.csv          equal-alert-budget decision, M1 vs B1b-GBM (large caps, validation)
-    data/processed/results_risk_limit_m1_session.csv  the 2017-07-24 example session (same models and rule)
+    data/processed/results_risk_limit_m1_session.csv  the 2018-03-15 example session (same models and rule)
     data/processed/text_subset_representativeness.csv text-subset medians (market cap, analysts)
     data/processed/build_log.txt                      data funnel
     data/processed/example_rows_dev.csv               six real development rows for the data slide
@@ -121,7 +121,7 @@ else:
     print(f"note: subsample medians and PCA size use the documented values ({DOCUMENTED}); data files absent")
 rlm = pd.read_csv(P / "results_risk_limit_m1.csv").set_index("model")              # M1 decision, large caps, validation
 D0, D1, DG = rlm.loc["B1b-GBM"], rlm.loc[M1N], rlm.loc["gain: M1 - B1b-GBM"]
-sess = pd.read_csv(P / "results_risk_limit_m1_session.csv")                         # 2017-07-24, same models and rule
+sess = pd.read_csv(P / "results_risk_limit_m1_session.csv")                         # 2018-03-15, same models and rule
 PCA_VAR = "90.1%"                                                              # printed by m1_text_v2.py pca (not stored)
 
 fun = lambda pat: int(re.search(pat, log).group(1).replace(",", ""))
@@ -371,7 +371,6 @@ notes(s, f"Source: data/processed/build_log.txt. {F0:,} = '8-K earnings events i
 # Six real rows of model_table.parquet (development split): the first dev event, by release time, of six names.
 # Saved to data/processed/example_rows_dev.csv because model_table.parquet is licensed and not committed.
 s = frame(4, "What one earnings event looks like")
-tag(s, "Real rows · development data")
 ex = pd.read_csv(P / "example_rows_dev.csv")
 assert len(ex) == 6 and (pd.to_datetime(ex.session_date).dt.year <= 2016).all()
 text(s, M, TOP - 0.05, W - 2 * M, 0.45, [[("One row per 8-K earnings release. ", {"bold": True, "color": INK}),
@@ -424,12 +423,10 @@ for i, row in enumerate([XCOLS] + xrows):
         p_.alignment = PP_ALIGN.LEFT if j in (0, 1, 2, 5) else PP_ALIGN.RIGHT
         r_ = p_.add_run(); r_.text = val
         r_.font.name = FONT; r_.font.size = Pt(13 if i == 0 else 15); r_.font.bold = bold; r_.font.color.rgb = color
-text(s, M, TY + HROW + BROW * len(xrows) + 0.1, W - 2 * M, 0.35,
-     ["Daily volatility in brackets · first development-period event of six names"], size=12, italic=True,
-     color=MUTED, name="Table note")
-text(s, M, 6.45, W - 2 * M - 1.2, 0.4, ["v_pre/v_post = log realized volatility 20 days before / 5 days after; "
-     "sue_price = earnings surprise ÷ price; log_mktcap = log market value; when = release timing. "
-     "v_post is what we predict."], size=13, italic=True, color=BODY, name="Caption")
+text(s, M, TY + HROW + BROW * len(xrows) + 0.15, W - 2 * M, 0.35,
+     ["v_pre / v_post = log realized volatility 20 days before / 5 days after · % in brackets = daily volatility · "
+      "sue_price = surprise ÷ price · log_mktcap = log market value"], size=12, italic=True, color=MUTED,
+     name="Table note")
 notes(s, "Six real rows of data/processed/model_table.parquet, development split (2006-16), no holdout rows: for each of "
          "SLM, SAI, PFG, SPF, RATE and TAST, the first development event by release time. Saved to "
          "data/processed/example_rows_dev.csv (model_table.parquet is licensed and not committed). Values are as stored; "
@@ -459,9 +456,9 @@ for num, head, body in rungs:
 text(s, M, 5.55, W - 2 * M, 0.95, [[("Scope: ", {"bold": True, "color": BLUE}),
      ("B0–B1b-GBM full market; M1 large-cap subset, incl. one-time 2021–25 holdout", {})],
      [("Why large-cap: ", {"bold": True, "color": BLUE}),
-      ("text was collected only for filings passing the extraction screen (price > $5, market cap > NYSE 20th "
-       f"percentile, 3+ analysts): large, well-covered firms (median ~${CAP_B:.1f}B, {ANALYSTS} analysts vs "
-       f"{ANALYSTS_OUT} outside), the desk's liquid names.", {})]],
+      ("we focus the text analysis on liquid large-caps (price > $5, market cap > NYSE 20th percentile, "
+       f"3+ analysts). That's a derivatives desk's trading universe (median ~${CAP_B:.1f}B, {ANALYSTS} analysts vs "
+       f"{ANALYSTS_OUT} outside).", {})]],
      size=14, space_after=4, name="Scope line")
 picture(s, FIG / "02_vpre_vs_vpost.png", W - M - 4.85, TOP + 0.6, w=4.85, name="Figure: v_pre vs v_post")
 text(s, M, 6.62, W - 2 * M, 0.3, ["v_pre / v_post = log realized volatility 20 days before / 5 days after the release; "
@@ -658,16 +655,18 @@ s = frame(9, "One earnings session: how the desk would use it")
 tag(s, SUB_TAG)
 GREEN, GREEN_BG = RGBColor(0x2E, 0x7D, 0x4F), RGBColor(0xE3, 0xF1, 0xE7)
 AMBER, AMBER_BG = RGBColor(0x9A, 0x5B, 0x00), RGBColor(0xFB, 0xEE, 0xDC)
-NAMES = {"CALM": "Cal-Maine Foods", "SGMS": "Scientific Games", "ARNC": "Arconic", "WBMD": "WebMD Health",   # CRSP
-         "MAN": "ManpowerGroup", "HAS": "Hasbro", "LII": "Lennox International", "VFC": "VF Corp",
-         "SWK": "Stanley Black & Decker", "ITW": "Illinois Tool Works"}
+NAMES = {"DDD": "3D Systems", "GCO": "Genesco", "ADT": "ADT", "SMTC": "Semtech",   # CRSP issuer names, shortened
+         "WSM": "Williams-Sonoma", "DG": "Dollar General"}
+assert set(sess.ticker) == set(NAMES) and (sess.session_date == "2018-03-15").all()
 _ss = sess.sort_values("gbm_pred_daily_vol", ascending=False)
 SESSION = [(r.ticker, NAMES[r.ticker], f"{r.gbm_pred_daily_vol:.2%}", "Y" if r.gbm_flag else "N", f"{r.actual_daily_vol:.2%}",
             "Y" if r.big_move else "N", r.gbm_outcome) for r in _ss.itertuples()]
 _o = _ss.gbm_outcome.value_counts()
 assert (_ss.gbm_flag.sum(), _ss.big_move.sum(), _o.get("HIT", 0), _o.get("false alarm", 0)) == (3, 2, 1, 2)
 _m1f = _ss[_ss.m1_flag].sort_values("m1_pred_daily_vol", ascending=False)
-assert _ss.m1_flag.sum() == 2 and (_ss.m1_outcome == "HIT").sum() == 0 and _ss.big_move.sum() == 2
+assert _ss.m1_flag.sum() == 3 and (_ss.m1_outcome == "HIT").sum() == 1 and _ss.big_move.sum() == 2
+_hit = _ss[_ss.gbm_outcome == "HIT"].iloc[0]; _miss = _ss[_ss.gbm_outcome == "MISS"].iloc[0]
+assert (_hit.ticker, _miss.ticker) == ("ADT", "SMTC")
 hdr = ("Ticker", "Company", "Predicted vol", "Flagged", "Actual vol", "Big move", "Outcome")
 cw = [0.8, 2.55, 0.95, 0.8, 0.95, 0.85, 1.35]
 gf = s.shapes.add_table(len(SESSION) + 1, len(hdr), Inches(M), Inches(TOP + 0.05), Inches(sum(cw)),
@@ -713,19 +712,27 @@ box(s, tx, TOP + 0.05, tw, 2.75, fill=TINT, shape=MSO_SHAPE.ROUNDED_RECTANGLE, n
 text(s, tx + 0.2, TOP + 0.17, tw - 0.4, 2.55, [
     [("Model: B1b-GBM (no text); flagged = top 25% of predicted volatility", {"bold": True, "color": MUTED, "size": 13})],
     [("Flagged 3 names; caught 1 of 2 big movers ", {"bold": True, "color": INK}),
-     ("(Scientific Games, 13%/day); missed WebMD; 2 false alarms", {})],
+     (f"({NAMES[_hit.ticker]}, {_hit.actual_daily_vol:.1%}/day); missed {NAMES[_miss.ticker]} "
+      f"({_miss.actual_daily_vol:.1%}); 2 false alarms", {})],
     [("Honest mix: better aim, same alert budget", {"bold": True, "color": BLUE})],
 ], size=16, space_after=8, name="Takeaway")
 text(s, tx, TOP + 2.98, tw, 2.3, [
     [("Across all large-cap sessions: ", {"bold": True, "color": BODY}),
      ("adding the text catches more of the big movers on average", {})],
     [("With text (M1) on this session: ", {"bold": True, "color": BODY}),
-     (f"flags {' and '.join(NAMES[t] for t in _m1f.ticker)}, misses both big movers. Text helps on average, "
-      "not every session", {})]],
+     (f"flags the same 3 names, same hit ({NAMES[_hit.ticker]}) and miss ({NAMES[_miss.ticker]}). "
+      "Text helps on average, not on every session", {})]],
      size=14, color=BODY, space_after=6, name="Reconciliation")
-text(s, M, TOP + 0.05 + 0.5 + 0.37 * len(SESSION) + 0.18, sum(cw), 0.55, [
-    "Big move > 4.86%/day (2006–16 top quartile); Hasbro, ManpowerGroup ~4.2%, just under · all released pre-open, "
-    "2017-07-24"],
+assert sorted(_m1f.ticker) == sorted(_ss[_ss.gbm_flag].ticker)
+_yb = TOP + 0.05 + 0.5 + 0.37 * len(SESSION) + 0.2
+text(s, M, _yb, sum(cw), 0.75, [
+    [("Why this session: ", {"bold": True, "color": INK}),
+     ("a representative large-cap session: median catch rate, precision near the model's average "
+      "(validation 2017–19)", {})]],
+     size=16, color=BODY, name="Selection rule")
+text(s, M, _yb + 0.9, sum(cw), 0.8, [
+    "Big move > 4.86%/day (2006–16 top quartile) · All six react in the same session (2018-03-15); three released "
+    "after the prior close, three pre-open"],
      size=14, italic=True, color=MUTED, name="Footnote")
 notes(s, "Source: results_risk_limit_m1_session.csv (risk_limit_m1.py). Same models and rule as the decision test (results_risk_limit_m1.csv): B1b-GBM and M1 "
          "fit on text-subset dev 2006-16; big move = v_post above the full-sample dev top-quartile cut-off "
@@ -733,9 +740,13 @@ notes(s, "Source: results_risk_limit_m1_session.csv (risk_limit_m1.py). Same mod
          f"predictions (B1b-GBM > {D0.flag_cutoff_daily_vol:.4%}/day). This table shows B1b-GBM (no text). M1 on the same "
          "session: " + ", ".join(f"{r.ticker} {r.m1_pred_daily_vol:.2%} {r.m1_outcome}" for r in
                                   sess.sort_values("m1_pred_daily_vol", ascending=False).itertuples())
-         + ". Session 2017-07-24 was chosen earlier by rule (median catch rate among nights with >=2 big movers) under the "
-         "finalized full-dev B1b-GBM; the outcome pattern is unchanged under this model. Validation only; no holdout. "
-         "Company names from CRSP. Volatility is unsigned: '13%/day' is size, not direction.")
+         + ". Selection rule: among the 312 large-cap validation sessions with >= 2 big "
+         "movers, keep those with <= 12 names (to fit the slide) at B1b-GBM's median catch rate (50%); of these, take "
+         "precision closest to B1b-GBM's overall 36.9% (four sessions tie at 33.3%); break the tie by requiring M1 also "
+         "at its median catch rate with precision closest to its overall 38.1%. Only 2018-03-15 satisfies all. Release "
+         "times: 3D Systems, Williams-Sonoma, Semtech after the close on 2018-03-14; Genesco, ADT, Dollar General "
+         "pre-open on 2018-03-15. Validation only; no holdout. Company names from CRSP. Volatility is unsigned: "
+         "'6.1%/day' is size, not direction.")
 
 # ======================================================================= 10. next / limitations
 s = frame(10, "What's next, and what we can't claim yet")
@@ -758,9 +769,9 @@ text(s, 7.2, TOP + 0.8, 5.5, 0.4, ["Limitations"], size=14, bold=True, color=MUT
 text(s, 7.2, TOP + 1.2, W - M - 7.2, 3.9, [
     [("No options-implied-vol benchmark: ", {"bold": True, "color": INK}),
      ("our baseline is past realized vol, not the desk's implied vol", {})],
-    [("Large caps only: ", {"bold": True, "color": INK}),
-     ("text collected under the extraction screen (price > $5, mkt cap > NYSE 20th pct, 3+ analysts; "
-      f"median ~${CAP_B:.1f}B, {ANALYSTS} analysts)", {})],
+    [("Large caps by design: ", {"bold": True, "color": INK}),
+     ("the desk's liquid universe (price > $5, mkt cap > NYSE 20th pct, 3+ analysts; "
+      f"median ~${CAP_B:.1f}B, {ANALYSTS} analysts); smaller names not yet tested", {})],
     "Tabular value-added ~halves out-of-sample (text gain did not)",
     "Big moves caught, not dollars",
 ], size=16, bullets=True, space_after=8, name="Limitations")

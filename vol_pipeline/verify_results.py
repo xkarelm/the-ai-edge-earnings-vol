@@ -130,13 +130,13 @@ check(None, "  ... extra per 100 events", "+0.46", f"+{100 * extra / n_val:.2f}"
 check(None, "  ... extra per quarter (12 validation quarters)", "~10", f"~{extra / 12:.0f}")
 
 # ------------------------------------------------------------------ one session (results_risk_limit_m1_session.csv)
-print("\nOne session, 2017-07-24   (results_risk_limit_m1_session.csv)")
+print("\nOne session, 2018-03-15   (results_risk_limit_m1_session.csv)")
 s = pd.read_csv(P / "results_risk_limit_m1_session.csv")
 o = s.gbm_outcome.value_counts()
 check(9, "B1b-GBM: flagged / big movers / caught / false alarms", "3 / 2 / 1 / 2",
       f"{int(s.gbm_flag.sum())} / {int(s.big_move.sum())} / {o.get('HIT', 0)} / {o.get('false alarm', 0)}")
-check(9, "Scientific Games realized vol (the hit)", "13.29%", f"{s.set_index('ticker').loc['SGMS', 'actual_daily_vol']:.2%}")
-check(9, "M1 on the same session: flagged / caught", "2 / 0",
+check(9, "ADT realized vol (the hit)", "6.1%", f"{s.set_index('ticker').loc['ADT', 'actual_daily_vol']:.1%}")
+check(9, "M1 on the same session: flagged / caught", "3 / 1",
       f"{int(s.m1_flag.sum())} / {int((s.m1_outcome == 'HIT').sum())}")
 
 print(f"\n{'ALL CLAIMS MATCH' if not fails else f'{len(fails)} MISMATCH(ES): ' + '; '.join(fails)}")

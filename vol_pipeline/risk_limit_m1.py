@@ -9,10 +9,13 @@ Decision rule = Convention B (as on the one-session example slide):
   big move = realized v_post above the top-quartile cut-off of ALL dev 2006-16 events (full sample, = 4.86%/day)
   alert    = each model flags its own top 25% of predicted v_post on the evaluated rows (equal alert budget)
 Gain from text: M1 - B1b-GBM, with a 95% interval from a paired bootstrap over session dates.
-Also reports the 2017-07-24 session under M1 (the example slide).
+Also reports the 2018-03-15 example session under both models (the example slide). Selection rule: among large-cap
+validation sessions with >= 2 big movers and <= 12 names (to fit the slide), those at B1b-GBM's median catch rate (50%);
+of these, precision closest to B1b-GBM's overall 36.9% (four tie at 33.3%); tie broken by M1 also at its median catch
+rate with precision closest to its overall 38.1%. Only 2018-03-15 satisfies all.
 
     python risk_limit_m1.py   -> data/processed/results_risk_limit_m1.csv
-                                 data/processed/results_risk_limit_m1_session.csv   (the 2017-07-24 session, both models)
+                                 data/processed/results_risk_limit_m1_session.csv   (the 2018-03-15 session, both models)
 """
 import numpy as np
 import pandas as pd
@@ -28,7 +31,7 @@ OUT = C.OUT / "results_risk_limit_m1.csv"
 OUT_SESSION = C.OUT / "results_risk_limit_m1_session.csv"
 M1N = "M1 = B1b-GBM + text"
 EXPECTED = {"dev": 44_739, "validation": 14_614}
-SESSION = pd.Timestamp("2017-07-24")
+SESSION = pd.Timestamp("2018-03-15")
 B, SEED = 2000, 0
 
 
