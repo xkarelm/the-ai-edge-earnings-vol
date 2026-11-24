@@ -3,6 +3,8 @@
 Forecasting how much a stock will move in the days after an earnings release, and testing whether the **text of the
 earnings release** adds anything beyond the numbers.
 
+**Team:** Sacha Elalouf, Karel Moryoussef, Ana Cioata, Ghadi Ghaddaf
+
 ## The finding
 
 - **Past volatility does most of the work.** How much the stock moved in the 20 trading days before the release explains

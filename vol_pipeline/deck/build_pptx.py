@@ -148,7 +148,7 @@ W, H, M, TOP = 13.333, 7.5, 0.6, 1.65
 
 prs = Presentation()
 prs.slide_width, prs.slide_height = Inches(W), Inches(H)
-prs.core_properties.author = "Sacha Elalouf, Karel Moryoussef, Ana Cioata, Ghali al Ghaddaf"
+prs.core_properties.author = "Sacha Elalouf, Karel Moryoussef, Ana Cioata, Ghadi Ghaddaf"
 prs.core_properties.last_modified_by = ""          # replaces the python-pptx template default
 prs.core_properties.title = "Forecasting post-earnings volatility for a derivatives desk"
 BLANK = prs.slide_layouts[6]
@@ -283,7 +283,7 @@ text(s, M + 0.3, 1.45, 11.8, 1.75, ["Forecasting post-earnings volatility", "for
 box(s, M + 0.3, 3.45, 1.2, 0.06, fill=BLUE, name="Title rule")
 text(s, M + 0.3, 3.72, 11.8, 0.95, ["Does the earnings release add signal beyond the numbers, for a derivatives desk?"],
      size=24, color=BLUE, name="Subtitle")
-text(s, M + 0.3, 5.3, 11.8, 0.95, ["Sacha Elalouf · Karel Moryoussef · Ana Cioata · Ghali al Ghaddaf", "November 2026"],
+text(s, M + 0.3, 5.3, 11.8, 0.95, ["Sacha Elalouf · Karel Moryoussef · Ana Cioata · Ghadi Ghaddaf", "November 2026"],
      size=18, color=BODY, space_after=6, name="Authors and date")
 text(s, W - M - 1.0, H - 0.55, 1.0, 0.36, ["1"], size=11, color=MUTED, align=PP_ALIGN.RIGHT, name="Page number")
 notes(s, "Every number in this deck is read from data/processed results files at build time (see deck/build_pptx.py). "
